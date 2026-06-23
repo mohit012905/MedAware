@@ -71,4 +71,13 @@ class AppointmentController extends Controller
         return back()
             ->with('success','Appointment Cancelled');
     }
+
+public function getDoctors($hospitalId)
+{
+    $doctors = Doctor::where('hospital_id', $hospitalId)
+                ->select('id', 'name')
+                ->get();
+
+    return response()->json($doctors);
+}
 }

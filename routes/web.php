@@ -8,6 +8,8 @@ use App\Http\Controllers\HospitalController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AlertController;
 use App\Http\Controllers\HealthLogController;
+  use App\Http\Controllers\DashboardController;
+ use App\Http\Controllers\ChatbotController;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,7 +30,10 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
 
     // Dashboard
-    Route::view('/dashboard', 'dashboard')->name('dashboard');
+  
+
+Route::get('/dashboard',[DashboardController::class,'index'])
+    ->name('dashboard');
 
     // Chatbot
     Route::view('/chat', 'chat')->name('chat');
@@ -46,6 +51,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::delete('/appointments/{appointment}', [AppointmentController::class, 'destroy'])
         ->name('appointments.destroy');
+        Route::get('/doctors/{hospital}', [AppointmentController::class, 'getDoctors'])
+    ->name('doctors.byHospital');
 
     // Alerts
     Route::get('/alerts', [AlertController::class, 'index'])
@@ -54,6 +61,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Health Logs
     Route::get('/health-logs', [HealthLogController::class, 'index'])
         ->name('health.logs');
+       
+
+
 });
 
 /*
@@ -72,8 +82,11 @@ Route::middleware('auth')->group(function () {
 
     Route::delete('/profile', [ProfileController::class, 'destroy'])
         ->name('profile.destroy');
+       
 });
-
+ Route::post('/chatbot/analyze', [ChatbotController::class, 'analyze']);
+ Route::post('/chat/{id}', [ChatController::class, 'send'])
+    ->name('chat.send');
 /*
 |--------------------------------------------------------------------------
 | Authentication Routes
