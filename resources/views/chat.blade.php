@@ -1,795 +1,548 @@
 @extends('layouts.app')
+
 @section('content')
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MedAware AI Chatbot</title>
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+<div class="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50 py-8">
 
-    <style>
-        /* ========================================= */
-        /* RESET & BASE */
-        /* ========================================= */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+    <div class="max-w-5xl mx-auto px-4">
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 30%, #ecfeff 70%, #f0f9ff 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
+        {{-- Chat Card --}}
+        <div class="bg-white rounded-3xl shadow-2xl border border-emerald-100 overflow-hidden">
 
-        /* ========================================= */
-        /* CONTAINER */
-        /* ========================================= */
-        .container {
-            width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            padding: 30px;
-            border-radius: 24px;
-            box-shadow: 0 20px 60px rgba(16, 185, 129, 0.15), 0 10px 30px rgba(0, 0, 0, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            transition: all 0.3s ease;
-        }
+            {{-- Header --}}
+            <div class="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 px-6 py-5 text-white">
 
-        /* ========================================= */
-        /* HEADER */
-        /* ========================================= */
-        .header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 25px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid rgba(16, 185, 129, 0.15);
-        }
+                <div class="flex items-center justify-between">
 
-        .header-icon {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #059669, #0d9488);
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-        }
+                    <div class="flex items-center gap-4">
 
-        .header-text h2 {
-            font-size: 24px;
-            font-weight: 700;
-            color: #065f46;
-            margin: 0;
-            letter-spacing: -0.5px;
-        }
+                        <div class="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center text-3xl">
+                            🩺
+                        </div>
 
-        .header-text p {
-            font-size: 13px;
-            color: #6b7280;
-            margin: 2px 0 0 0;
-        }
+                        <div>
+                            <h1 class="text-2xl font-bold">
+                                MedAware AI
+                            </h1>
 
-        .status-badge {
-            margin-left: auto;
-            background: #d1fae5;
-            color: #065f46;
-            padding: 4px 14px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
+                            <p class="text-emerald-100 text-sm">
+                                AI-Powered Public Health Assistant
+                            </p>
+                        </div>
 
-        .status-badge .dot {
-            width: 8px;
-            height: 8px;
-            background: #10b981;
-            border-radius: 50%;
-            display: inline-block;
-            animation: pulse-dot 2s infinite;
-        }
+                    </div>
 
-        @keyframes pulse-dot {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(0.8); }
-        }
+                    <div class="hidden md:flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
 
-        /* ========================================= */
-        /* CHAT BOX */
-        /* ========================================= */
-        #chat {
-            height: 420px;
-            overflow-y: auto;
-            padding: 20px;
-            background: rgba(249, 250, 251, 0.6);
-            border-radius: 16px;
-            border: 1px solid rgba(229, 231, 235, 0.5);
-            margin-bottom: 20px;
-            scroll-behavior: smooth;
-        }
+                        <span class="w-2.5 h-2.5 rounded-full bg-green-300 animate-pulse"></span>
 
-        /* Custom Scrollbar */
-        #chat::-webkit-scrollbar {
-            width: 6px;
-        }
+                        <span class="text-sm font-medium">
+                            Online
+                        </span>
 
-        #chat::-webkit-scrollbar-track {
-            background: transparent;
-        }
+                    </div>
 
-        #chat::-webkit-scrollbar-thumb {
-            background: #d1d5db;
-            border-radius: 3px;
-        }
-
-        #chat::-webkit-scrollbar-thumb:hover {
-            background: #9ca3af;
-        }
-
-        /* ========================================= */
-        /* MESSAGE STYLES */
-        /* ========================================= */
-        .message {
-            margin-bottom: 16px;
-            animation: fadeInUp 0.4s ease;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(15px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .user {
-            text-align: right;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-        }
-
-        .user .bubble {
-            background: linear-gradient(135deg, #059669, #0d9488);
-            color: white;
-            padding: 12px 18px;
-            border-radius: 18px 18px 4px 18px;
-            max-width: 80%;
-            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
-            font-size: 14px;
-            line-height: 1.6;
-            word-wrap: break-word;
-        }
-
-        .user .label {
-            font-size: 11px;
-            color: #6b7280;
-            margin-bottom: 4px;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-        }
-
-        .bot {
-            text-align: left;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .bot .bubble {
-            background: white;
-            color: #1f2937;
-            padding: 16px 20px;
-            border-radius: 18px 18px 18px 4px;
-            max-width: 85%;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-            border: 1px solid rgba(229, 231, 235, 0.3);
-            font-size: 14px;
-            line-height: 1.7;
-            word-wrap: break-word;
-        }
-
-        .bot .label {
-            font-size: 11px;
-            color: #6b7280;
-            margin-bottom: 4px;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .bot .label .avatar {
-            width: 22px;
-            height: 22px;
-            background: linear-gradient(135deg, #059669, #0d9488);
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            color: white;
-        }
-
-        /* ========================================= */
-        /* BOT RESPONSE FORMATTING */
-        /* ========================================= */
-        .bot-disease {
-            font-weight: 700;
-            color: #065f46;
-            font-size: 15px;
-            display: block;
-            margin-bottom: 4px;
-        }
-
-        .bot-risk {
-            display: inline-block;
-            padding: 2px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            margin: 4px 0 8px 0;
-        }
-
-        .bot-risk.critical {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-
-        .bot-risk.high {
-            background: #fef3c7;
-            color: #d97706;
-        }
-
-        .bot-risk.medium {
-            background: #fef9c3;
-            color: #ca8a04;
-        }
-
-        .bot-risk.low {
-            background: #d1fae5;
-            color: #059669;
-        }
-
-        .bot-advice {
-            margin: 8px 0;
-            padding-left: 16px;
-            border-left: 3px solid #059669;
-        }
-
-        .bot-advice li {
-            list-style: none;
-            padding: 2px 0;
-            color: #4b5563;
-            font-size: 13px;
-        }
-
-        .bot-advice li::before {
-            content: "• ";
-            color: #059669;
-            font-weight: 700;
-        }
-
-        .bot-alert {
-            margin-top: 10px;
-            padding: 10px 14px;
-            border-radius: 10px;
-            background: #fef2f2;
-            color: #dc2626;
-            font-size: 13px;
-            font-weight: 600;
-            border: 1px solid #fecaca;
-        }
-
-        .bot-alert.emergency {
-            background: #fee2e2;
-            color: #b91c1c;
-            border-color: #f87171;
-            animation: pulse-alert 1.5s ease-in-out infinite;
-        }
-
-        @keyframes pulse-alert {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-
-        /* ========================================= */
-        /* INPUT AREA */
-        /* ========================================= */
-        .input-area {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .input-area input {
-            flex: 1;
-            padding: 14px 18px;
-            border: 2px solid #e5e7eb;
-            border-radius: 14px;
-            font-size: 14px;
-            outline: none;
-            transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.8);
-            font-family: inherit;
-        }
-
-        .input-area input:focus {
-            border-color: #059669;
-            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
-        }
-
-        .input-area input::placeholder {
-            color: #9ca3af;
-        }
-
-        .input-area button {
-            padding: 14px 28px;
-            background: linear-gradient(135deg, #059669, #0d9488);
-            color: white;
-            border: none;
-            border-radius: 14px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            white-space: nowrap;
-            font-family: inherit;
-        }
-
-        .input-area button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
-        }
-
-        .input-area button:active {
-            transform: translateY(0);
-        }
-
-        .input-area button svg {
-            width: 18px;
-            height: 18px;
-        }
-
-        /* ========================================= */
-        /* FOOTER */
-        /* ========================================= */
-        .footer {
-            margin-top: 16px;
-            text-align: center;
-            font-size: 11px;
-            color: #9ca3af;
-        }
-
-        .footer kbd {
-            background: #f3f4f6;
-            padding: 1px 8px;
-            border-radius: 4px;
-            font-size: 10px;
-            font-family: monospace;
-            border: 1px solid #e5e7eb;
-        }
-
-        /* ========================================= */
-        /* TYPING INDICATOR */
-        /* ========================================= */
-        .typing-indicator {
-            display: flex;
-            gap: 4px;
-            padding: 8px 0;
-        }
-
-        .typing-indicator span {
-            width: 8px;
-            height: 8px;
-            background: #9ca3af;
-            border-radius: 50%;
-            display: inline-block;
-            animation: typing-bounce 1.4s ease-in-out infinite;
-        }
-
-        .typing-indicator span:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .typing-indicator span:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
-        @keyframes typing-bounce {
-            0%, 60%, 100% {
-                transform: translateY(0);
-                opacity: 0.4;
-            }
-            30% {
-                transform: translateY(-8px);
-                opacity: 1;
-            }
-        }
-
-        /* ========================================= */
-        /* RESPONSIVE */
-        /* ========================================= */
-        @media (max-width: 640px) {
-            .container {
-                padding: 16px;
-                border-radius: 16px;
-            }
-
-            .header-text h2 {
-                font-size: 18px;
-            }
-
-            .status-badge {
-                font-size: 10px;
-                padding: 3px 10px;
-            }
-
-            #chat {
-                height: 320px;
-                padding: 14px;
-            }
-
-            .user .bubble,
-            .bot .bubble {
-                max-width: 95%;
-                font-size: 13px;
-                padding: 10px 14px;
-            }
-
-            .input-area {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .input-area input {
-                width: 100%;
-                padding: 12px 16px;
-                font-size: 14px;
-            }
-
-            .input-area button {
-                width: 100%;
-                justify-content: center;
-                padding: 12px 20px;
-            }
-
-            .header {
-                flex-wrap: wrap;
-                gap: 10px;
-            }
-
-            .status-badge {
-                margin-left: 0;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 12px;
-                border-radius: 12px;
-            }
-
-            #chat {
-                height: 280px;
-                padding: 10px;
-            }
-
-            .bot .bubble,
-            .user .bubble {
-                font-size: 12px;
-                padding: 8px 12px;
-            }
-
-            .header-icon {
-                width: 40px;
-                height: 40px;
-                font-size: 22px;
-            }
-
-            .header-text h2 {
-                font-size: 16px;
-            }
-        }
-
-        /* ========================================= */
-        /* EMPTY STATE */
-        /* ========================================= */
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #9ca3af;
-        }
-
-        .empty-state .icon {
-            font-size: 48px;
-            margin-bottom: 12px;
-        }
-
-        .empty-state h4 {
-            color: #4b5563;
-            font-size: 16px;
-            margin-bottom: 4px;
-        }
-
-        .empty-state p {
-            font-size: 13px;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="container">
-
-        <!-- ========================================= -->
-        <!-- HEADER -->
-        <!-- ========================================= -->
-        <div class="header">
-            <div class="header-icon">🩺</div>
-            <div class="header-text">
-                <h2>MedAware AI</h2>
-                <p>Your AI-Powered Health Assistant</p>
-            </div>
-            <div class="status-badge">
-                <span class="dot"></span>
-                Online
-            </div>
-        </div>
-
-        <!-- ========================================= -->
-        <!-- CHAT BOX -->
-        <!-- ========================================= -->
-        <div id="chat">
-            <div class="empty-state">
-                <div class="icon">💬</div>
-                <h4>How can I help you?</h4>
-                <p>Describe your symptoms and I'll assist you</p>
-            </div>
-        </div>
-
-        <!-- ========================================= -->
-        <!-- INPUT AREA -->
-        <!-- ========================================= -->
-        <div class="input-area">
-            <input
-                id="message"
-                placeholder="Describe your symptoms..."
-                autocomplete="off"
-                onkeypress="if(event.key==='Enter') sendMessage()"
-            >
-            <button onclick="sendMessage()">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-                </svg>
-                Send
-            </button>
-        </div>
-
-        <!-- ========================================= -->
-        <!-- FOOTER -->
-        <!-- ========================================= -->
-        <div class="footer">
-            Press <kbd>Enter</kbd> to send • AI responses are for informational purposes only
-        </div>
-    </div>
-
-    <!-- ========================================= -->
-    <!-- SCRIPTS -->
-    <!-- ========================================= -->
-    <script>
-        // =========================================
-        // DOM Elements
-        // =========================================
-        const chatBox = document.getElementById('chat');
-        const messageInput = document.getElementById('message');
-        let isWaiting = false;
-
-        // =========================================
-        // Scroll to Bottom
-        // =========================================
-        function scrollToBottom() {
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        // =========================================
-        // Show Typing Indicator
-        // =========================================
-        function showTypingIndicator() {
-            const typingDiv = document.createElement('div');
-            typingDiv.className = 'message bot';
-            typingDiv.id = 'typing-indicator';
-            typingDiv.innerHTML = `
-                <div class="label">
-                    <span class="avatar">AI</span> MedAware is thinking...
                 </div>
-                <div class="bubble">
-                    <div class="typing-indicator">
-                        <span></span>
-                        <span></span>
-                        <span></span>
+
+            </div>
+
+            {{-- Welcome Banner --}}
+            <div class="bg-emerald-50 border-b border-emerald-100 px-6 py-4">
+
+                <div class="flex gap-3">
+
+                    <div class="text-2xl">
+                        💡
+                    </div>
+
+                    <div>
+
+                        <h2 class="font-semibold text-emerald-800">
+                            Welcome to MedAware
+                        </h2>
+
+                        <p class="text-sm text-gray-600 mt-1">
+                            Describe your symptoms naturally. I can help identify
+                            possible conditions, assess risk level, provide
+                            preventive guidance, and recommend nearby hospitals
+                            if necessary.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            {{-- Chat Area --}}
+            <div id="chat" class="h-[520px] overflow-y-auto bg-slate-50 px-6 py-6 space-y-5">
+
+                {{-- Bot Welcome --}}
+                <div class="flex items-start gap-3" id="welcome-message">
+
+                    <div class="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold flex-shrink-0">
+                        AI
+                    </div>
+
+                    <div class="max-w-2xl bg-white rounded-2xl shadow border border-gray-100 p-4">
+
+                        <p class="font-semibold text-emerald-700 mb-2">
+                            MedAware Assistant
+                        </p>
+
+                        <p class="text-gray-700">
+                            Hello! 👋
+                        </p>
+
+                        <p class="text-gray-700 mt-2">
+                            I can help you understand symptoms,
+                            provide disease awareness,
+                            assess health risks,
+                            and suggest emergency action when needed.
+                        </p>
+
+                        <p class="text-gray-700 mt-2">
+                            Please tell me what you're experiencing.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            {{-- Typing Indicator --}}
+            <div id="typing" class="hidden px-6 pb-3">
+
+                <div class="flex items-center gap-3">
+
+                    <div class="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center text-white flex-shrink-0">
+                        AI
+                    </div>
+
+                    <div class="bg-white shadow rounded-xl px-4 py-3 flex items-center gap-1">
+
+                        <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
+                        <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
+                        <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            {{-- Input Section --}}
+            <div class="border-t bg-white px-6 py-5">
+
+                <form id="chat-form">
+
+                    @csrf
+
+                    <div class="flex gap-3">
+
+                        <input
+                            type="text"
+                            id="message"
+                            autocomplete="off"
+                            placeholder="Describe your symptoms..."
+                            class="flex-1 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 px-5 py-4 text-gray-700"
+                        >
+
+                        <button
+                            type="submit"
+                            class="bg-emerald-600 hover:bg-emerald-700 transition text-white px-8 rounded-xl font-semibold">
+
+                            Send
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+                <div class="mt-4 flex flex-wrap gap-2">
+
+                    <button class="quick-question px-4 py-2 rounded-full bg-emerald-100 text-emerald-700 text-sm hover:bg-emerald-200 transition">
+                        I have fever and cough
+                    </button>
+
+                    <button class="quick-question px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm hover:bg-blue-200 transition">
+                        I have headache
+                    </button>
+
+                    <button class="quick-question px-4 py-2 rounded-full bg-orange-100 text-orange-700 text-sm hover:bg-orange-200 transition">
+                        I have chest pain
+                    </button>
+
+                    <button class="quick-question px-4 py-2 rounded-full bg-red-100 text-red-700 text-sm hover:bg-red-200 transition">
+                        I have fever and loss of taste
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    const form = document.getElementById("chat-form");
+    const input = document.getElementById("message");
+    const chat = document.getElementById("chat");
+    const typing = document.getElementById("typing");
+
+    // ===============================
+    // Get CSRF Token
+    // ===============================
+
+    function getCsrfToken() {
+        const metaToken = document.querySelector('meta[name="csrf-token"]');
+        if (metaToken) {
+            return metaToken.getAttribute('content');
+        }
+        const inputToken = document.querySelector('input[name="_token"]');
+        if (inputToken) {
+            return inputToken.value;
+        }
+        return null;
+    }
+
+    // ===============================
+    // Auto Scroll
+    // ===============================
+
+    function scrollBottom() {
+        chat.scrollTop = chat.scrollHeight;
+    }
+
+    // ===============================
+    // User Bubble
+    // ===============================
+
+    function addUserMessage(message) {
+        // Remove welcome message if exists
+        const welcomeMsg = document.getElementById('welcome-message');
+        if (welcomeMsg && chat.children.length === 1) {
+            welcomeMsg.remove();
+        }
+
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'flex justify-end';
+        msgDiv.innerHTML = `
+            <div class="max-w-2xl bg-emerald-600 text-white rounded-2xl px-5 py-3 shadow">
+                ${escapeHtml(message)}
+            </div>
+        `;
+        chat.appendChild(msgDiv);
+        scrollBottom();
+    }
+
+    // ===============================
+    // Escape HTML
+    // ===============================
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // ===============================
+    // Format Text
+    // ===============================
+
+    function formatText(text) {
+        if (!text) return '';
+        return text
+            .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+            .replace(/\n/g, "<br>")
+            .replace(/•/g, "•");
+    }
+
+    // ===============================
+    // Render AI Response
+    // ===============================
+
+    function renderResponse(data) {
+        let html = "";
+
+        // ===============================
+        // 1. AI Reply / Message
+        // ===============================
+        if (data.reply) {
+            html += `
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold flex-shrink-0">
+                    AI
+                </div>
+                <div class="flex-1 bg-white rounded-2xl shadow border border-gray-100 overflow-hidden">
+                    <div class="px-5 py-4 border-b bg-emerald-50">
+                        <h3 class="font-semibold text-emerald-700">MedAware Assistant</h3>
+                    </div>
+                    <div class="px-5 py-4 leading-8 text-gray-700">
+                        ${formatText(data.reply)}
                     </div>
                 </div>
-            `;
-            chatBox.appendChild(typingDiv);
-            scrollToBottom();
+            </div>`;
         }
 
-        // =========================================
-        // Remove Typing Indicator
-        // =========================================
-        function removeTypingIndicator() {
-            const indicator = document.getElementById('typing-indicator');
-            if (indicator) {
-                indicator.remove();
-            }
+        // ===============================
+        // 2. Disease / Condition
+        // ===============================
+        if (data.disease && data.disease !== 'Unknown' && data.disease !== null) {
+            const isCovid = data.disease.toLowerCase().includes('covid') || data.disease.toLowerCase().includes('corona');
+            const diseaseColor = isCovid ? 'red' : 'blue';
+            
+            html += `
+            <div class="bg-${diseaseColor}-50 rounded-xl border border-${diseaseColor}-200 p-5">
+                <h3 class="font-semibold text-${diseaseColor}-700 mb-3">🩺 Possible Condition</h3>
+                <div class="text-lg font-bold text-${diseaseColor}-900">${escapeHtml(data.disease)}</div>
+                ${data.confidence ? `<div class="text-sm text-gray-600 mt-1">Confidence: ${data.confidence}%</div>` : ''}
+                ${data.matched_symptoms && data.matched_symptoms.length > 0 ? `<div class="text-sm text-gray-500 mt-1">Matched Symptoms: ${escapeHtml(data.matched_symptoms.join(', '))}</div>` : ''}
+            </div>`;
         }
 
-        // =========================================
-        // Add User Message
-        // =========================================
-        function addUserMessage(message) {
-            // Remove empty state if exists
-            const emptyState = chatBox.querySelector('.empty-state');
-            if (emptyState) {
-                emptyState.remove();
+        // ===============================
+        // 3. Risk Level
+        // ===============================
+        if (data.risk) {
+            let riskText = data.risk;
+            if (typeof data.risk === 'object') {
+                riskText = data.risk.risk || data.risk;
+            }
+            const riskLower = String(riskText).toLowerCase();
+            let bgColor = "green";
+            let icon = "🟢";
+
+            if (riskLower === "medium") {
+                bgColor = "yellow";
+                icon = "🟡";
+            } else if (riskLower === "high") {
+                bgColor = "orange";
+                icon = "🟠";
+            } else if (riskLower === "critical" || riskLower === "emergency") {
+                bgColor = "red";
+                icon = "🔴";
             }
 
-            const msgDiv = document.createElement('div');
-            msgDiv.className = 'message user';
-            msgDiv.innerHTML = `
-                <div class="label">You</div>
-                <div class="bubble">${escapeHtml(message)}</div>
-            `;
-            chatBox.appendChild(msgDiv);
-            scrollToBottom();
+            html += `
+            <div class="bg-${bgColor}-50 border border-${bgColor}-200 rounded-xl p-5">
+                <div class="font-bold text-${bgColor}-700 text-lg">${icon} Risk Assessment</div>
+                <div class="mt-2 text-${bgColor}-700 font-semibold">${escapeHtml(riskText)}</div>
+                ${data.risk_score ? `<div class="text-sm text-gray-500 mt-1">Risk Score: ${data.risk_score}/100</div>` : ''}
+            </div>`;
         }
 
-        // =========================================
-        // Add Bot Message
-        // =========================================
-        function addBotMessage(data) {
-            const msgDiv = document.createElement('div');
-            msgDiv.className = 'message bot';
+        // ===============================
+        // 4. Recommendations / Advice
+        // ===============================
+        const adviceItems = data.recommendations || data.advice || [];
+        if (adviceItems.length > 0) {
+            html += `
+            <div class="bg-green-50 rounded-xl border border-green-200 p-5">
+                <h3 class="font-semibold text-green-700 mb-3">💊 Recommendations</h3>
+                <ul class="list-disc pl-5 space-y-2">`;
+            adviceItems.forEach(item => {
+                html += `<li class="text-gray-700">${escapeHtml(item)}</li>`;
+            });
+            html += `</ul></div>`;
+        }
 
-            // Determine risk class
-            let riskClass = 'low';
-            if (data.risk && data.risk.toLowerCase() === 'critical') riskClass = 'critical';
-            else if (data.risk && data.risk.toLowerCase() === 'high') riskClass = 'high';
-            else if (data.risk && data.risk.toLowerCase() === 'medium') riskClass = 'medium';
+        // ===============================
+        // 5. Emergency Alert
+        // ===============================
+        const alertText = data.alert || '';
+        const isEmergency = alertText.toLowerCase().includes('emergency') || 
+                           alertText.toLowerCase().includes('108') ||
+                           data.emergency === true;
 
-            // Build advice list
-            let adviceHtml = '';
-            if (data.advice && data.advice.length > 0) {
-                adviceHtml = '<ul class="bot-advice">';
-                data.advice.forEach(item => {
-                    adviceHtml += `<li>${escapeHtml(item)}</li>`;
-                });
-                adviceHtml += '</ul>';
-            }
-
-            // Build alert
-            let alertHtml = '';
-            if (data.alert) {
-                const isEmergency = data.alert.toLowerCase().includes('emergency') || data.alert.toLowerCase().includes('immediate');
-                alertHtml = `<div class="bot-alert ${isEmergency ? 'emergency' : ''}">⚠️ ${escapeHtml(data.alert)}</div>`;
-            }
-
-            msgDiv.innerHTML = `
-                <div class="label">
-                    <span class="avatar">AI</span> MedAware
+        if (isEmergency && alertText) {
+            html += `
+            <div class="bg-red-100 border-l-4 border-red-600 rounded-xl p-5 animate-pulse">
+                <h2 class="text-red-700 font-bold text-xl">🚨 Emergency Warning</h2>
+                <p class="mt-3 text-gray-700">${escapeHtml(alertText)}</p>
+                <div class="mt-4 flex flex-wrap gap-3">
+                    <button onclick="window.location.href='tel:108'" class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg transition">
+                        Call Emergency (108)
+                    </button>
+                    <button onclick="window.open('https://www.google.com/maps/search/hospitals+near+me','_blank')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg transition">
+                        Find Nearby Hospital
+                    </button>
                 </div>
-                <div class="bubble">
-                    <span class="bot-disease">🩺 ${escapeHtml(data.disease || 'General Symptoms')}</span>
-                    <span class="bot-risk ${riskClass}">${escapeHtml(data.risk || 'Low')} Risk</span>
-                    ${adviceHtml}
-                    ${alertHtml}
-                </div>
-            `;
-            chatBox.appendChild(msgDiv);
-            scrollToBottom();
+            </div>`;
         }
 
-        // =========================================
-        // Send Message
-        // =========================================
-        async function sendMessage() {
-            const message = document.getElementById('message').value.trim();
-            if (message === '' || isWaiting) return;
+        // ===============================
+        // 6. Disclaimer
+        // ===============================
+        html += `
+        <div class="text-xs text-gray-500 italic mt-2">
+            MedAware provides awareness and educational guidance only.
+            It does not replace consultation with a qualified healthcare professional.
+        </div>`;
 
-            // Add user message
-            addUserMessage(message);
+        // Append all content to chat
+        const container = document.createElement('div');
+        container.innerHTML = html;
+        while (container.firstChild) {
+            chat.appendChild(container.firstChild);
+        }
+        scrollBottom();
+    }
 
-            // Clear input
-            document.getElementById('message').value = '';
+    // ===============================
+    // Typing Indicator
+    // ===============================
 
-            // Show typing indicator
-            isWaiting = true;
-            showTypingIndicator();
+    function showTyping() {
+        typing.classList.remove("hidden");
+        scrollBottom();
+    }
 
-            try {
-                const response = await fetch("/chatbot/analyze", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
-                        "Accept": "application/json"
-                    },
-                    body: JSON.stringify({
-                        message: message
-                    })
-                });
+    function hideTyping() {
+        typing.classList.add("hidden");
+    }
 
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
+    // ===============================
+    // Send Message to Backend
+    // ===============================
 
-                const data = await response.json();
-                const bot = data.chatbot_response || data;
+    async function sendMessage(message) {
+        addUserMessage(message);
+        input.value = "";
+        showTyping();
 
-                // Remove typing indicator
-                removeTypingIndicator();
+        try {
+            // FastAPI backend URL - update if your server runs on different port
+            const API_URL = "http://localhost:8000/analyze";
 
-                // Add bot message
-                addBotMessage(bot);
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({
+                    message: message
+                })
+            });
 
-            } catch (error) {
-                console.error('Error:', error);
-                removeTypingIndicator();
-
-                // Fallback error message
-                const fallbackData = {
-                    disease: 'Unable to Analyze',
-                    risk: 'Unknown',
-                    advice: ['Please try again or consult a doctor directly.'],
-                    alert: 'We encountered an error processing your request. Please try again.'
-                };
-                addBotMessage(fallbackData);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            isWaiting = false;
-        }
+            const data = await response.json();
+            hideTyping();
 
-        // =========================================
-        // Escape HTML
-        // =========================================
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
+            // Render the response
+            renderResponse(data);
 
-        // =========================================
-        // Focus input on load
-        // =========================================
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('message').focus();
+        } catch (error) {
+            console.error('Error:', error);
+            hideTyping();
+            
+            // Fallback response when backend is not reachable
+            renderResponse({
+                reply: "⚠️ Unable to connect to the AI server. Please check your connection and try again.",
+                disease: null,
+                risk: null,
+                recommendations: ["Check your internet connection.", "Try again in a few moments.", "If the problem persists, please contact support."],
+                alert: null,
+                emergency: false
+            });
+        }
+    }
+
+    // ===============================
+    // Form Submit
+    // ===============================
+
+    form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const message = input.value.trim();
+        if (message === "") return;
+        sendMessage(message);
+    });
+
+    // ===============================
+    // Enter Key
+    // ===============================
+
+    input.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            form.requestSubmit();
+        }
+    });
+
+    // ===============================
+    // Quick Questions
+    // ===============================
+
+    document.querySelectorAll(".quick-question").forEach(button => {
+        button.addEventListener("click", () => {
+            input.value = button.innerText.trim();
+            form.requestSubmit();
         });
-    </script>
+    });
 
-</body>
-</html>
+    // Initial scroll
+    scrollBottom();
+
+});
+</script>
+
+<style>
+    /* Custom scrollbar */
+    #chat::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #chat::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    #chat::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+        border-radius: 3px;
+    }
+
+    #chat::-webkit-scrollbar-thumb:hover {
+        background: #9ca3af;
+    }
+
+    /* Bounce animation for typing indicator */
+    @keyframes bounce {
+        0%, 60%, 100% {
+            transform: translateY(0);
+        }
+        30% {
+            transform: translateY(-6px);
+        }
+    }
+
+    .animate-bounce {
+        animation: bounce 1.2s ease-in-out infinite;
+    }
+
+    /* Pulse animation for emergency */
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.7;
+        }
+    }
+
+    .animate-pulse {
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+</style>
+
 @endsection

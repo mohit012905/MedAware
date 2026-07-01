@@ -1,4 +1,4 @@
-def assess_risk(symptoms, disease):
+def assess_risk(symptoms, disease, user_message):
 
     symptom_count = len(symptoms)
 
